@@ -29,9 +29,18 @@ public struct WebView: View {
     let url: URL?
     @Environment(\.dismiss) var dismiss
     @Environment(\.openURL) var openURL
+    @State var error: Error? = nil
+    let browserActionClicked: (URL?) async throws -> Void
+    let errorDismissAction: () -> Void
     
-    public init(url: URL?) {
+    public init(
+        url: URL?,
+        browserActionClicked: @escaping (URL?) async throws -> Void,
+        errorDismissAction: @escaping () -> Void = { }
+    ) {
         self.url = url
+        self.browserActionClicked = browserActionClicked
+        self.errorDismissAction = errorDismissAction
     }
     
     public var body: some View {
@@ -43,8 +52,13 @@ public struct WebView: View {
                         if let url {
                             Button {
                                 // open in safari
-                                openURL(url)
-                                dismiss() // Should this dismiss?
+                                Task {
+                                    do {
+                                        try await browserActionClicked(url)
+                                    } catch {
+                                        self.error = error
+                                    }
+                                }
                             } label: {
                                 Image(systemName: "safari")
                             }
@@ -59,6 +73,7 @@ public struct WebView: View {
                         })
                     }
                 }
+                .alert(error: $error, dismissAction: errorDismissAction)
         }
     }
 }
