@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 public extension View {
     /// Presents an error alert, based on the value of an `Error` binding.
     /// The dismiss button on the alert resets the value of the binding to `nil`.
